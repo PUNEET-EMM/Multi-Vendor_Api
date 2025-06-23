@@ -7,7 +7,7 @@ A scalable Node.js service that provides a unified API for interacting with mult
 ```bash
 # Clone the repository
 git clone https://github.com/PUNEET-EMM/Multi-Vendor_Api.git
-cd multi-vendor-data-fetch-service
+cd Multi-Vendor_Api
 
 # Start all services with Docker Compose
 docker-compose up --build

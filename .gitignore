@@ -1,0 +1,21 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+.env
+.env.local
+*.log
+
+# Docker
+*.pid
+*.sock
+docker-compose.override.yml
+
+# OS / Editor junk
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Test outputs
+coverage/
+*.test.json

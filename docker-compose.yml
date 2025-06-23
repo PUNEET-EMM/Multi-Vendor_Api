@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  api-server:
+    build: .
+    container_name: api-server
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/vendor_service?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - PORT=3000
+    depends_on:
+      - mongodb
+      - redis
+      - mock-vendor-sync
+      - mock-vendor-async
+    networks:
+      - app-network
+    command: npm start
+
+  worker:
+    build: .
+    container_name: worker
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/vendor_service?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - MOCK_VENDOR_SYNC_URL=http://mock-vendor-sync:3001
+      - MOCK_VENDOR_ASYNC_URL=http://mock-vendor-async:3002
+      - API_SERVER_URL=http://api-server:3000
+    depends_on:
+      - mongodb
+      - redis
+      - api-server
+    networks:
+      - app-network
+    command: npm run worker
+
+  mock-vendor-sync:
+    build: .
+    container_name: mock-vendor-sync
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - VENDOR_TYPE=sync
+    networks:
+      - app-network
+    command: npm run mock-vendor
+
+  mock-vendor-async:
+    build: .
+    container_name: mock-vendor-async
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - VENDOR_TYPE=async
+      - API_SERVER_URL=http://api-server:3000
+    networks:
+      - app-network
+    command: npm run mock-vendor
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -154,28 +154,6 @@ k6 run --vus 100 --duration 30s tests/load-test.js
 - **Rationale**: Flexible schema for varying job payloads, good performance for document-based data
 - **Trade-off**: Eventual consistency vs ACID guarantees
 
-## Production Considerations
-
-### Monitoring & Observability
-- Structured logging with Winston
-- Health check endpoints
-- Graceful shutdown handling
-
-### Security
-- Input validation with Joi
-- PII removal in data cleaning
-- Rate limiting protection
-
-### Scalability
-- Horizontal scaling of worker processes
-- Database indexing for performance
-- TTL indexes for automatic cleanup
-
-### Reliability
-- Job retry mechanisms
-- Webhook retry logic
-- Circuit breaker pattern (optional enhancement)
-
 ## Load Test Results Summary
 
 **Test Configuration**: 60 seconds, 200 concurrent users, mixed POST/GET traffic

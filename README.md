@@ -16,34 +16,6 @@ docker-compose up --build
 # The API will be available at http://localhost:3000
 ```
 
-### Without Docker (Manual Setup)
-```bash
-# Clone the repository
-git clone https://github.com/PUNEET-EMM/Multi-Vendor_Api.git
-cd Multi-Vendor_Api
-
-# Install dependencies
-npm install
-
-# Set up required services (MongoDB and Redis must be running)
-# Start MongoDB on default port 27017
-# Start Redis on default port 6379
-
-# Terminal 1: Start Sync Mock Vendor
-VENDOR_TYPE=sync PORT=3001 node vendor-server.js
-
-# Terminal 2: Start Async Mock Vendor  
-VENDOR_TYPE=async PORT=3002 node vendor-server.js
-
-# Terminal 3: Start API Server
-npm start
-
-# Terminal 4: Start Background Worker
-npm run worker
-
-# The API will be available at http://localhost:3000
-```
-
 ## Architecture Overview
 
 ```
@@ -64,66 +36,6 @@ npm run worker
                     │ Mock Vendor  │    │ Mock Vendor  │    │   Webhook    │
                     │   (Sync)     │    │   (Async)    │───▶│   Callback   │
                     └──────────────┘    └──────────────┘    └──────────────┘
-```
-
-## Prerequisites (For Manual Setup)
-
-Before running without Docker, ensure you have:
-
-1. **Node.js** (v14 or higher)
-2. **MongoDB** running on port 27017
-3. **Redis** running on port 6379
-
-### Installing MongoDB (Ubuntu/Debian)
-```bash
-sudo apt update
-sudo apt install mongodb
-sudo systemctl start mongodb
-sudo systemctl enable mongodb
-```
-
-### Installing Redis (Ubuntu/Debian)
-```bash
-sudo apt update
-sudo apt install redis-server
-sudo systemctl start redis-server
-sudo systemctl enable redis-server
-```
-
-### Installing MongoDB (macOS)
-```bash
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
-```
-
-### Installing Redis (macOS)
-```bash
-brew install redis
-brew services start redis
-```
-
-## Environment Variables
-
-### Required Environment Variables (for manual setup)
-```bash
-# Database connections
-MONGODB_URI=mongodb://localhost:27017/vendor_service
-REDIS_URL=redis://localhost:6379
-
-# API Configuration
-PORT=3000
-NODE_ENV=development
-
-# Vendor URLs (for manual setup)
-MOCK_VENDOR_SYNC_URL=http://localhost:3001
-MOCK_VENDOR_ASYNC_URL=http://localhost:3002
-API_SERVER_URL=http://localhost:3000
-```
-
-### Optional Environment Variables
-```bash
-LOG_LEVEL=info
 ```
 
 ## API Endpoints
@@ -209,59 +121,6 @@ npm run load-test
 # Or run k6 directly with custom parameters
 k6 run --vus 100 --duration 30s tests/load-test.js
 ```
-
-## Available NPM Scripts
-```bash
-npm start            # Start API server (production)
-npm run dev          # Start API server (development with auto-reload)
-npm run worker       # Start background worker (production)
-npm run dev:worker   # Start background worker (development with auto-reload)
-npm run load-test    # Run load tests with k6
-```
-
-## Running Mock Vendors Separately
-```bash
-# Sync vendor (responds immediately)
-VENDOR_TYPE=sync PORT=3001 node vendor-server.js
-
-# Async vendor (uses webhooks)
-VENDOR_TYPE=async PORT=3002 node vendor-server.js
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-   ```bash
-   # Check if MongoDB is running
-   sudo systemctl status mongodb
-   # Or on macOS
-   brew services list | grep mongodb
-   ```
-
-2. **Redis Connection Error**
-   ```bash
-   # Check if Redis is running
-   sudo systemctl status redis-server
-   # Test Redis connection
-   redis-cli ping
-   ```
-
-3. **Port Already in Use**
-   ```bash
-   # Check what's using port 3000
-   lsof -i :3000
-   # Kill process if needed
-   kill -9 <PID>
-   ```
-
-4. **Environment Variables Not Set**
-   ```bash
-   # Create a .env file in project root
-   echo "MONGODB_URI=mongodb://localhost:27017/vendor_service" > .env
-   echo "REDIS_URL=redis://localhost:6379" >> .env
-   ```
 
 ## Key Design Decisions
 
@@ -372,34 +231,4 @@ VENDOR_TYPE=async PORT=3002 node vendor-server.js
 - **Concurrent users**: Successfully handled 200 peak concurrent users
 - **Job processing time**: Average 43.2s end-to-end (including vendor processing)
 
-### **Key Findings:**
 
-✅ **Excellent Performance:**
-- All thresholds passed with significant margin
-- Zero error rate under heavy load
-- Fast API response times (avg 6.6ms)
-- High throughput sustained throughout test
-
-✅ **System Stability:**
-- No timeouts or connection failures
-- Clean job processing pipeline
-- Proper async/sync vendor load balancing
-- Efficient queue processing
-
-✅ **Scalability Validated:**
-- 200 concurrent users handled smoothly
-- Linear scaling with no bottlenecks observed
-- Memory usage remained stable
-- Database performance optimal
-
-### **Bottlenecks Identified:**
-- **Job Completion Time**: Some jobs took up to 104s (vendor processing delays)
-- **Vendor Processing**: Mock vendor delays simulate real-world latency
-- **Queue Throughput**: Could scale further with additional worker processes
-
-### **Optimizations Applied:**
-- **Database Indexing**: Optimized MongoDB queries for job lookup
-- **Connection Pooling**: Configured efficient database connections
-- **Rate Limiting**: Balanced vendor limits to prevent overwhelming
-- **Memory Management**: Implemented job tracking with size limits
-- **Error Handling**: Robust retry logic with exponential backoff
